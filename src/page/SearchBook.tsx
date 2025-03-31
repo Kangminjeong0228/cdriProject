@@ -1,37 +1,57 @@
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { Title1, Title2, Body2 } from '../style/Text';
-import searchIcon from '../assets/svg/searchIcon.svg';
 import { searchBookApi } from '../api';
+import BookList from './BookList';
 
+const useSearchBook = (query: string) => {
+    return useQuery({
+        queryKey: ['searchBook', query],
+        queryFn: async () => {
+            const oData = {
+                query,
+                target: 'title',
+                sort: 'accuracy',
+                page: 1,
+                size: 10,
+            };
+            return searchBookApi(oData);
+        },
+        enabled: !!query,
+    });
+};
 
 const SearchBook: React.FC = () => {
-    const searchBook = async () => {
-        const oData = {
-            query: '미움받을 용기',
-            target: 'title', 
-            sort: 'accuracy', 
-            page: 1, 
-            size: 10,
-          };
+    const [inputValue, setInputValue] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const { data, isLoading, error } = useSearchBook(searchQuery);
+    const bookData = data?.data?.documents ?? [];
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            setSearchQuery(inputValue);
+        }
+    };
 
-        try {
-          const result = await searchBookApi(oData);
-          console.log('result--->', result)
-        } catch (err) {
-        } 
-      };
     return (
         <Style>
             <div>
                 <Title2 className='searchBookTitle'>도서 검색</Title2>
                 <div className='searchContent'>
                     <div className='searchInput'>
-                        <img src={searchIcon} alt="검색 아이콘" />
-                        <input type="text" placeholder='검색어를 입력하세요' />
+                        <img src='/assets/svg/searchIcon.svg' alt="검색 아이콘" />
+                        <input
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            type="text"
+                            placeholder='검색어를 입력하세요' />
                     </div>
-                    <button onClick={searchBook}><Body2 className='searchBtnText'>상세검색</Body2></button>
+                    <button ><Body2 className='searchBtnText'>상세검색</Body2></button>
                 </div>
+                {isLoading && <div>로딩 중</div>}
+                {error && <div>다시 시도해주세요요</div>}
+                <BookList bookData={bookData} />
             </div>
 
         </Style>

@@ -1,12 +1,24 @@
 import axiosInstance from './axios';
 
-export const searchBookApi = async (oData: any) => {
+interface BookSearchDataType {
+  query: string;
+  target: string;
+  sort: string;
+  page: number;
+  size: number;
+}
+
+export const searchBookApi = async (oData: BookSearchDataType) => {
   try {
-    const response = await axiosInstance.get('/book', {
-      params:
-        oData
-    });
+    const sUrl = '/book'; 
+    const response = await axiosInstance.get(sUrl, { params: oData });
+    return response;
   } catch (error) {
-    console.error('searchBook Error:', error);
+    let oErr: any = error;
+    return {
+      ok: false,
+      msg: `[searchBookApi 도서검색 오류] ${oErr.toString()}`,
+      data: undefined,
+    };
   }
 };

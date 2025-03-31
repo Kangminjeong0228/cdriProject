@@ -1,4 +1,3 @@
-// src/components/Tab.tsx
 import React from "react";
 import styled from 'styled-components';
 import { Body1 } from '../../style/Text';
