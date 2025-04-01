@@ -6,6 +6,7 @@ body {
     padding: 0;
     box-sizing: border-box;
 }
+
 h1,
 h2,
 h3,
@@ -22,9 +23,21 @@ button {
     margin: 0;
     padding: 0;
 }
+
 button {
     background: none;
     outline: none;
-    border:none;
+    border: none;
     cursor: pointer;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
 }

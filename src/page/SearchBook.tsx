@@ -5,15 +5,14 @@ import { Title1, Title2, Body2 } from '../style/Text';
 import { searchBookApi } from '../api';
 import BookList from './BookList';
 
-const useSearchBook = (query: string) => {
+const useSearchBook = (query: string, page: number) => {
     return useQuery({
-        queryKey: ['searchBook', query],
+        queryKey: ['searchBook', query, page],
         queryFn: async () => {
             const oData = {
                 query,
-                target: 'title',
                 sort: 'accuracy',
-                page: 1,
+                page: page,
                 size: 10,
             };
             return searchBookApi(oData);
@@ -23,15 +22,22 @@ const useSearchBook = (query: string) => {
 };
 
 const SearchBook: React.FC = () => {
+    const [currentPage, setCurrentPage] = useState(1);
     const [inputValue, setInputValue] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const { data, isLoading, error } = useSearchBook(searchQuery);
+    const { data, isLoading, error } = useSearchBook(searchQuery, currentPage);
     const bookData = data?.data?.documents ?? [];
+    const bookMetaData = data?.data.meta
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             setSearchQuery(inputValue);
         }
     };
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchQuery]);
+
 
     return (
         <Style>
@@ -51,7 +57,7 @@ const SearchBook: React.FC = () => {
                 </div>
                 {isLoading && <div>로딩 중</div>}
                 {error && <div>다시 시도해주세요요</div>}
-                <BookList bookData={bookData} />
+                <BookList bookData={bookData} bookMetaData={bookMetaData} currentPage={currentPage} setCurrentPage={setCurrentPage} />
             </div>
 
         </Style>

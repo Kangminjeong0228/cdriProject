@@ -22,10 +22,15 @@ const MainPage: React.FC = () => {
 export default MainPage;
 
 const Style = styled.div`
-.contentWrap {
-    width: 100%;
-    margin: 0 auto;
-    padding: 80px 30%;
-}
-  
+    .contentWrap {
+        width: 1000px;
+        margin: 0 auto;
+        padding: 80px 0;
+    }
+    @media (max-width: 1000px) {
+        .contentWrap {
+            width: 100%;
+            padding: 0 3vw;
+        }
+    }
 `;

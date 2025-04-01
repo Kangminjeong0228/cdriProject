@@ -2,7 +2,6 @@ import axiosInstance from './axios';
 
 interface BookSearchDataType {
   query: string;
-  target: string;
   sort: string;
   page: number;
   size: number;
