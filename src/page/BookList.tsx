@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Title3, Body2, Caption, } from '../style/Text';
 import Pagenation from '../component/Pagenations';
+import { BookType } from '../api';
 
 
 interface BookListType {
+    likeBook: BookType[];
+    setLikeBook: React.Dispatch<React.SetStateAction<BookType[]>>;
+    type: string;
     bookData: BookType[];
     bookMetaData: BookMetaDataType;
     currentPage: number;
@@ -15,29 +19,28 @@ interface BookMetaDataType {
     pageable_count: number;
     total_count: number;
 }
-interface BookType {
-    authors: string[];
-    contents: string;
-    datetime: string;
-    isbn: string;
-    price: number;
-    publisher: string;
-    sale_price: number;
-    status: string;
-    thumbnail: string;
-    title: string;
-    translators: string[];
-    url: string;
-}
 
 
-const BookList: React.FC<BookListType> = ({ bookData, bookMetaData, currentPage, setCurrentPage }) => {
+const BookList: React.FC<BookListType> = ({ likeBook, setLikeBook, type, bookData, bookMetaData, currentPage, setCurrentPage }) => {
     const [detailIndex, setDetailIndex] = useState<number | null>(null);
     const [detailBookData, setDetailBookData] = useState<BookType>();
 
     const handleToggle = (index: number, data: BookType) => {
         setDetailIndex(prevIndex => (prevIndex === index ? null : index));
         setDetailBookData(data)
+    };
+    const handleClick = (book: BookType) => {
+        const isClicked = likeBook.some((b) => b.isbn === book.isbn);
+
+        if (isClicked) {
+            const updatedBooks = likeBook.filter((b) => b.isbn !== book.isbn);
+            setLikeBook(updatedBooks);
+            localStorage.setItem('likeBook', JSON.stringify(updatedBooks));
+        } else {
+            const updatedBooks = [...likeBook, book];
+            setLikeBook(updatedBooks);
+            localStorage.setItem('likeBook', JSON.stringify(updatedBooks));
+        }
     };
 
     useEffect(() => {
@@ -81,7 +84,10 @@ const BookList: React.FC<BookListType> = ({ bookData, bookMetaData, currentPage,
                         return (
                             <div key={idx}>
                                 <div className='bookList row'>
-                                    {data.thumbnail ? <img className='bookImage' src={data.thumbnail} alt="책표지" /> : <div className='bookImage'></div>}
+                                    <div className='bookImage'>
+                                        {data.thumbnail ? <img src={data.thumbnail} alt="책표지" /> : <div></div>}
+                                        <img onClick={() => handleClick(data)} className='likeIcon' src={`/assets/svg/${likeBook.some((b) => b.isbn === data.isbn) ? 'likeFill' : 'like'}.svg`} alt="하트 아이콘" />
+                                    </div>
                                     <div className='bookInfo row'>
                                         <Title3 className='bookTitle'>{data.title}</Title3>
                                         <Body2 className='bookAuthors'>{authorText}</Body2>
@@ -109,7 +115,10 @@ const BookList: React.FC<BookListType> = ({ bookData, bookMetaData, currentPage,
         return (
             <div className='detailBookWrap row'>
                 {detailBookData?.thumbnail &&
-                    <img className='bookDetailImage' src={detailBookData.thumbnail} alt="책표지" />
+                    <div className='detailBookImage'>
+                        <img className='bookDetailImage' src={detailBookData.thumbnail} alt="책표지" />
+                        <img onClick={() => handleClick(detailBookData)} className='likeIcon' src={`/assets/svg/${likeBook.some((b) => b.isbn === detailBookData.isbn) ? 'likeFill' : 'like'}.svg`} alt="하트 아이콘" />
+                    </div>
                 }
                 <div className='bookDetailContentWrap'>
                     <div className='bookTitle row'>
@@ -194,10 +203,22 @@ const Style = styled.div`
         border-bottom: 1px solid #D2D6DA;
 
         .bookImage {
+            position: relative;
             width: 48px;
             min-width: 48px;
             height: 68px;
             margin: 0 32px 0 40px;
+
+            img {
+                width: 100%;
+            }
+            .likeIcon{
+                width: 16px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                cursor: pointer;
+            }
         }
         .bookInfo{
             flex: 1;
@@ -273,6 +294,16 @@ const Style = styled.div`
             color: ${({ theme }) => theme.Color.primary};
             white-space: pre-line;
             word-break: keep-all;
+        }
+        .detailBookImage {
+            position: relative;
+            .likeIcon {
+                width: 24px;
+                height: 24px;
+                position: absolute;
+                top: 8px;
+                right: 8px;
+            }
         }
     }
     .bookDetailContentWrap {
