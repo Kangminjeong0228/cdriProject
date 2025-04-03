@@ -39,7 +39,7 @@ const MainPage: React.FC = () => {
     const savedBooks = localStorage.getItem("likeBook");
     return savedBooks ? JSON.parse(savedBooks) : [];
   });
-  const { data, isLoading } = useSearchBook(searchQuery, currentPage,detailTarget);
+  const { data } = useSearchBook(searchQuery, currentPage,detailTarget);
 
   const sortedLikeBook = [...likeBook].reverse();
   const paginatedLikeBook = sortedLikeBook.slice(
