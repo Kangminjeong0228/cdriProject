@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import styled from "styled-components";
 import { Caption, Title2, Body2 } from "../style/Text";
 import useSearchHistory from "../hooks/useSearchHistory";
@@ -7,35 +7,43 @@ import Select from "../component/tabComponent/Select";
 interface SearchBookType {
   setCurrentPage: (currentPage: number) => void;
   setSearchQuery: (searchQuery: string) => void;
-  handleDetailSearch: (query: string, type: string) => void;
+  setDetailTarget: (detailTarget: string) => void;
 }
 
 const SearchBook: React.FC<SearchBookType> = ({
   setCurrentPage,
   setSearchQuery,
-  handleDetailSearch,
+  setDetailTarget,
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const { searchHistory, addHistory, removeHistory } = useSearchHistory();
   const [searchType, setSearchType] = useState<string>("title");
-  const [searchInput, setSearchInput] = useState<string>("");
   const [detailSearchModal, setDetailSearchModal] = useState<boolean>(false);
 
   const handleSearch = () => {
-    if (!inputValue.trim()) return;
-    setSearchQuery(inputValue);
+    const query = detailSearchModal ? searchInput : inputValue;
+    if (!query.trim()) return;
+
+    setSearchQuery(query);
     setCurrentPage(1);
+    setDetailTarget(detailSearchModal ? searchType : "");
     addHistory(inputValue);
     setInputValue("");
+    setSearchInput("");
+    setDetailSearchModal(false);
     inputRef.current?.blur();
   };
-  const handleSelectChange = (selectedOption: any) => {
-    if (selectedOption) {
-      setSearchType(selectedOption.value);
-    }
-  };
+  const historySearch = (history: string) => {
+    addHistory(history);
+    setSearchQuery(history);
+    setCurrentPage(1);
+    inputRef.current?.blur();
+    setDetailTarget('');
+  }
+
 
   return (
     <Style>
@@ -57,7 +65,7 @@ const SearchBook: React.FC<SearchBookType> = ({
               onBlur={() => setIsFocused(false)}
               placeholder="검색어를 입력하세요"
             />
-            {searchHistory.length > 0 && isFocused && (
+            {isFocused && searchHistory.length > 0 && (
               <div
                 className="hitoryWrap"
                 onMouseDown={(e) => e.preventDefault()}
@@ -67,18 +75,11 @@ const SearchBook: React.FC<SearchBookType> = ({
                     className="historyList"
                     key={index}
                     onClick={() => {
-                      addHistory(history);
-                      setSearchQuery(history);
-                      setCurrentPage(1);
-                      inputRef.current?.blur();
+                      historySearch(history);
                     }}
                   >
                     <Caption className="historyTitle">{history}</Caption>
-                    <button
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.stopPropagation();
-                        removeHistory(history);
-                      }}
+                    <button onClick={(e) => (e.stopPropagation(), removeHistory(history))}
                     >
                       <img src="/assets/svg/remove.svg" alt="삭제 아이콘" />
                     </button>
@@ -90,21 +91,22 @@ const SearchBook: React.FC<SearchBookType> = ({
           <div className="detailSearchBtnWrap">
             <button
               className="detailSearchBtn"
-              onClick={() => setDetailSearchModal(true)}
+              onClick={() => { setDetailSearchModal(true); setSearchType('title') }}
             >
               <Body2 className="detailSearchBtnText">상세검색</Body2>
             </button>
             {detailSearchModal && (
               <div className="detailSearchModal">
+                <img onClick={() => setDetailSearchModal(false)} className="closeModalBtn" src="/assets/svg/close.svg" alt="닫기 아이콘" />
                 <div className="detailSelectSearch">
                   <Select
                     options={[
                       { value: "title", label: "제목" },
-                      { value: "author", label: "저자명" },
+                      { value: "person", label: "저자명" },
                       { value: "publisher", label: "출판사" },
                     ]}
-                    onChange={handleSelectChange}
-                    defaultValue="title"
+                    onChange={(option) => setSearchType(option?.value || "title")}
+                    defaultValue={{ value: "title", label: "제목" }}
                   />
                   <input
                     type="text"
@@ -113,14 +115,8 @@ const SearchBook: React.FC<SearchBookType> = ({
                     onChange={(e) => setSearchInput(e.target.value)}
                   />
                 </div>
-                <button
-                  onClick={() => {
-                    handleDetailSearch(searchInput, searchType);
-                    setDetailSearchModal(false);
-                  }}
-                >
-                  검색하기
-                </button>
+                <button className="detailSelectSearchBtn" onClick={handleSearch}>검색하기</button>
+
               </div>
             )}
           </div>
@@ -212,15 +208,48 @@ const Style = styled.div`
   .detailSearchModal {
     width: 360px;
     position: absolute;
-    top: 50%;
+    top: 0%;
     left: 50%;
-    transform: translate(-50%, 100%);
+    transform: translate(-50%, 30%);
+    padding:  36px 24px;
     background: #fff;
     box-shadow: 0px 4px 14px 6px #97979726;
     border-radius: 8px;
 
     .detailSelectSearch {
       display: flex;
+      gap : 4px;
+
+      input {
+        flex: 1;
+        padding: 5px 9px;
+        border: none;
+        border-radius: none;
+        outline: none;
+        border-bottom: 1px solid ${({ theme }) => theme.Background.primary};
+        font-size: 14px;
+        font-weight: 500;
+      }
+      input::placeholder {
+        color: 1px solid #8D94A0;
+      }
+    }
+    .detailSelectSearchBtn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 7px;
+      background-color: ${({ theme }) => theme.Background.primary};
+      font-size: 14px;
+      font-weight: 500;
+      line-height:22px;
+      color: #fff;
+      border-radius: 8px;
+    }
+    .closeModalBtn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      cursor: pointer;
     }
   }
 `;

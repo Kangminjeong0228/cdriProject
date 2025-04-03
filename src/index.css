@@ -1,4 +1,4 @@
-@import url('//fonts.googleapis.com/earlyaccess/notosanskr.css');
+@import url(http://fonts.googleapis.com/earlyaccess/notosanskr.css); 
 
 *,
 body {
@@ -18,8 +18,10 @@ span,
 ul,
 li,
 a,
-button {
-    font-family: notosanskr;
+button,
+select,
+option {
+    font-family: 'Noto Sans KR', sans-serif;
     margin: 0;
     padding: 0;
 }
