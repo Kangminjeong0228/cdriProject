@@ -1,33 +1,34 @@
 export interface Theme {
-    Background: {
-        primary: string;
-        red: string;
-        gray: string;
-        lightGray: string;
-        white: string;
-        black: string;
-    };
-    Color: {
-        primary: string;
-        secondary: string;
-        subtitle: string;
-    };
+  Background: {
+    primary: string;
+    red: string;
+    gray: string;
+    lightGray: string;
+    white: string;
+    black: string;
+  };
+  Color: {
+    primary: string;
+    secondary: string;
+    title: string;
+    subtitle: string;
+  };
 }
 export const theme: Theme = {
-    Background: {
-        primary: "#4880EE",
-        red: "#E84118",
-        gray: "#DADADA",
-        lightGray: "#F2F4F6",
-        white: "#FFFFFF",
-        black: "#222222",
-    },
-    Color: {
-        primary: "#353C49",
-        secondary: "#6D7582",
-        subtitle: "#8D94A0",
-    }
-}
-
+  Background: {
+    primary: "#4880EE",
+    red: "#E84118",
+    gray: "#DADADA",
+    lightGray: "#F2F4F6",
+    white: "#FFFFFF",
+    black: "#222222",
+  },
+  Color: {
+    primary: "#353C49",
+    secondary: "#6D7582",
+    title: "#1A1E27",
+    subtitle: "#8D94A0",
+  },
+};
 
 export default theme;

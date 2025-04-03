@@ -20,6 +20,11 @@ export type BookType = {
   translators: string[];
   url: string;
 };
+export type BookMetaDataType = {
+  is_end: boolean;
+  pageable_count: number;
+  total_count: number;
+};
 
 export const searchBookApi = async (oData: BookSearchDataType) => {
   try {

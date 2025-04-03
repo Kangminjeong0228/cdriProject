@@ -1,26 +1,27 @@
-import styled from 'styled-components';
+import styled from "styled-components";
+import { BookMetaDataType } from "../api";
 
-interface BookMetaDataType {
-  is_end: boolean;
-  pageable_count: number;
-  total_count: number;
-}
 interface PaginationProps {
   bookMetaData: BookMetaDataType;
   currentPage: number;
   setCurrentPage: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ bookMetaData, currentPage, setCurrentPage }) => {
+const Pagination: React.FC<PaginationProps> = ({
+  bookMetaData,
+  currentPage,
+  setCurrentPage,
+}) => {
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(bookMetaData.total_count / itemsPerPage);
+  const totalPages = Math.ceil(bookMetaData?.total_count / itemsPerPage);
   const maxPageButtons = 5;
-
-  if (totalPages < 2) return null;
 
   const startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
   const endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
-  const pageNumbers = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  const pageNumbers = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, i) => startPage + i
+  );
 
   const changePage = (page: number) => {
     setCurrentPage(page);
@@ -36,7 +37,6 @@ const Pagination: React.FC<PaginationProps> = ({ bookMetaData, currentPage, setC
       changePage(currentPage + 1);
     }
   };
-
 
   return (
     <Style>
@@ -59,7 +59,10 @@ const Pagination: React.FC<PaginationProps> = ({ bookMetaData, currentPage, setC
         <button onClick={handleNext} disabled={currentPage === totalPages}>
           다음
         </button>
-        <button onClick={() => changePage(totalPages)} disabled={currentPage === totalPages}>
+        <button
+          onClick={() => changePage(totalPages)}
+          disabled={currentPage === totalPages}
+        >
           끝
         </button>
       </div>
@@ -74,7 +77,7 @@ const Style = styled.div`
     margin: 20px 0;
     justify-content: center;
     align-items: center;
-    gap : 2%;
+    gap: 2%;
 
     button {
       font-size: 16px;
@@ -82,7 +85,7 @@ const Style = styled.div`
     }
     .active {
       font-weight: 700;
-      color:${({ theme }) => theme.Background.primary};
+      color: ${({ theme }) => theme.Background.primary};
     }
   }
-`
+`;
