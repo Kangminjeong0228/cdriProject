@@ -1,65 +1,41 @@
 import { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import { Caption, Title2, Body2 } from "../style/Text";
+import useSearchHistory from "../hooks/useSearchHistory";
+import Select from "../component/tabComponent/Select";
 
 interface SearchBookType {
-  searchQuery: string;
   setCurrentPage: (currentPage: number) => void;
   setSearchQuery: (searchQuery: string) => void;
+  handleDetailSearch: (query: string, type: string) => void;
 }
 
 const SearchBook: React.FC<SearchBookType> = ({
-  searchQuery,
   setCurrentPage,
   setSearchQuery,
+  handleDetailSearch,
 }) => {
-  const maxHistory = 8;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isFocused, setIsFocused] = useState<boolean>(false);
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      setSearchQuery(inputValue);
-      setInputValue("");
-      inputRef.current?.blur();
-    }
-  };
-  const handleSelectHistory = (term: string) => {
-    setInputValue(term);
-    setSearchQuery(term);
-    inputRef.current?.blur();
-  };
+  const { searchHistory, addHistory, removeHistory } = useSearchHistory();
+  const [searchType, setSearchType] = useState<string>("title");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [detailSearchModal, setDetailSearchModal] = useState<boolean>(false);
 
   const handleSearch = () => {
-    if (!searchQuery.trim()) return;
-
-    const updatedHistory = [
-      searchQuery,
-      ...searchHistory.filter((term) => term !== searchQuery),
-    ].slice(0, maxHistory);
-
-    setSearchHistory(updatedHistory);
-    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
-  };
-  const handleDelete = (term: string) => {
-    const updatedHistory = searchHistory.filter((item) => item !== term);
-    setSearchHistory(updatedHistory);
-    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
-  };
-
-  useEffect(() => {
+    if (!inputValue.trim()) return;
+    setSearchQuery(inputValue);
     setCurrentPage(1);
-    handleSearch();
-  }, [searchQuery]);
-
-  useEffect(() => {
-    const storedHistory = JSON.parse(
-      localStorage.getItem("searchHistory") || "[]"
-    );
-    setSearchHistory(storedHistory);
-  }, []);
+    addHistory(inputValue);
+    setInputValue("");
+    inputRef.current?.blur();
+  };
+  const handleSelectChange = (selectedOption: any) => {
+    if (selectedOption) {
+      setSearchType(selectedOption.value);
+    }
+  };
 
   return (
     <Style>
@@ -76,10 +52,9 @@ const SearchBook: React.FC<SearchBookType> = ({
               ref={inputRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              type="text"
               placeholder="검색어를 입력하세요"
             />
             {searchHistory.length > 0 && isFocused && (
@@ -91,13 +66,18 @@ const SearchBook: React.FC<SearchBookType> = ({
                   <div
                     className="historyList"
                     key={index}
-                    onClick={() => handleSelectHistory(history)}
+                    onClick={() => {
+                      addHistory(history);
+                      setSearchQuery(history);
+                      setCurrentPage(1);
+                      inputRef.current?.blur();
+                    }}
                   >
                     <Caption className="historyTitle">{history}</Caption>
                     <button
-                      onClick={(e: any) => {
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.stopPropagation();
-                        handleDelete(history);
+                        removeHistory(history);
                       }}
                     >
                       <img src="/assets/svg/remove.svg" alt="삭제 아이콘" />
@@ -107,9 +87,43 @@ const SearchBook: React.FC<SearchBookType> = ({
               </div>
             )}
           </div>
-          <button className="detailSearchBtn">
-            <Body2 className="detailSearchBtnText">상세검색</Body2>
-          </button>
+          <div className="detailSearchBtnWrap">
+            <button
+              className="detailSearchBtn"
+              onClick={() => setDetailSearchModal(true)}
+            >
+              <Body2 className="detailSearchBtnText">상세검색</Body2>
+            </button>
+            {detailSearchModal && (
+              <div className="detailSearchModal">
+                <div className="detailSelectSearch">
+                  <Select
+                    options={[
+                      { value: "title", label: "제목" },
+                      { value: "author", label: "저자명" },
+                      { value: "publisher", label: "출판사" },
+                    ]}
+                    onChange={handleSelectChange}
+                    defaultValue="title"
+                  />
+                  <input
+                    type="text"
+                    placeholder="검색어 입력"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    handleDetailSearch(searchInput, searchType);
+                    setDetailSearchModal(false);
+                  }}
+                >
+                  검색하기
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Style>
@@ -129,15 +143,6 @@ const Style = styled.div`
     margin-top: 16px;
     position: relative;
     z-index: 2;
-
-    .detailSearchBtn {
-      padding: 10px;
-      border: 1px solid ${({ theme }) => theme.Color.subtitle};
-      border-radius: 8px;
-    }
-    .detailSearchBtnText {
-      color: ${({ theme }) => theme.Color.subtitle};
-    }
   }
 
   .searchInput {
@@ -189,6 +194,33 @@ const Style = styled.div`
           width: 16px;
         }
       }
+    }
+  }
+
+  /* 상세모달 */
+  .detailSearchBtnWrap {
+    position: relative;
+    .detailSearchBtn {
+      padding: 10px;
+      border: 1px solid ${({ theme }) => theme.Color.subtitle};
+      border-radius: 8px;
+    }
+    .detailSearchBtnText {
+      color: ${({ theme }) => theme.Color.subtitle};
+    }
+  }
+  .detailSearchModal {
+    width: 360px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 100%);
+    background: #fff;
+    box-shadow: 0px 4px 14px 6px #97979726;
+    border-radius: 8px;
+
+    .detailSelectSearch {
+      display: flex;
     }
   }
 `;

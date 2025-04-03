@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import styled from "styled-components";
 import Header from "../component/Header";
@@ -7,35 +7,83 @@ import BookList from "./BookList";
 import { searchBookApi, BookType, BookMetaDataType } from "../api";
 import Pagenation from "../component/Pagenations";
 
-const useSearchBook = (query: string, page: number) => {
+const useSearchBook = (
+  query: string,
+  page: number,
+  searchType: string,
+  isDetailSearch: boolean
+) => {
   return useQuery({
-    queryKey: ["searchBook", query, page],
+    queryKey: ["searchBook", query, page, searchType, isDetailSearch],
     queryFn: async () => {
       const oData = {
         query,
         sort: "accuracy",
-        page: page,
+        page,
         size: 10,
       };
-      return searchBookApi(oData);
+      const response = await searchBookApi(oData);
+
+      // if (isDetailSearch) {
+      //   const filteredDocuments = response.data.documents.filter(
+      //     (book: BookType) => {
+      //       if (searchType === "title") return book.title.includes(query);
+      //       if (searchType === "author")
+      //         return book.authors.some((author) => author.includes(query));
+      //       if (searchType === "publisher")
+      //         return book.publisher.includes(query);
+      //       return false;
+      //     }
+      //   );
+
+      //   return {
+      //     ...response,
+      //     data: { ...response.data, documents: filteredDocuments },
+      //   };
+      // }
+
+      return response;
     },
     enabled: !!query,
   });
 };
 
 const MainPage: React.FC = () => {
+  const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchType, setSearchType] = useState<string>("title");
+  const [isDetailSearch, setIsDetailSearch] = useState<boolean>(false);
   const [likeBook, setLikeBook] = useState<BookType[]>(() => {
     const savedBooks = localStorage.getItem("likeBook");
     return savedBooks ? JSON.parse(savedBooks) : [];
   });
-  const { data } = useSearchBook(searchQuery, currentPage);
-  const bookData = data?.data?.documents ?? [];
-  const bookMetaData: BookMetaDataType = data?.data.meta;
-  console.log("likeBook>>>", likeBook);
+  const { data } = useSearchBook(
+    searchQuery,
+    currentPage,
+    searchType,
+    isDetailSearch
+  );
+  console.log("8888888data", data);
+  const sortedLikeBook = [...likeBook].reverse();
+  const paginatedLikeBook = sortedLikeBook.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const bookData =
+    activeTab === 0 ? data?.data?.documents ?? [] : paginatedLikeBook;
+  const bookMetaData: BookMetaDataType | null = data?.data?.meta ?? null;
+  const totalBookCount =
+    activeTab === 0 ? bookMetaData?.total_count ?? 0 : likeBook.length;
 
+  const handleDetailSearch = (query: string, type: string) => {
+    setSearchQuery(query);
+    setSearchType(type);
+    setCurrentPage(1);
+    setIsDetailSearch(true);
+  };
+  console.log("bookData--->", bookData);
   return (
     <Style>
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -43,9 +91,9 @@ const MainPage: React.FC = () => {
         <div>
           {activeTab === 0 && (
             <SearchBook
-              searchQuery={searchQuery}
               setCurrentPage={setCurrentPage}
               setSearchQuery={setSearchQuery}
+              handleDetailSearch={handleDetailSearch}
             />
           )}
         </div>
@@ -53,16 +101,15 @@ const MainPage: React.FC = () => {
           type={activeTab === 0 ? "search" : "liked"}
           likeBook={likeBook}
           setLikeBook={setLikeBook}
-          bookData={activeTab === 0 ? bookData : likeBook}
-          bookMetaData={bookMetaData}
+          bookData={bookData}
+          totalBookCount={totalBookCount}
         />
-        {bookMetaData?.total_count > 10 && (
-          <Pagenation
-            bookMetaData={bookMetaData}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
-        )}
+
+        <Pagenation
+          totalPage={totalBookCount}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+        />
       </div>
     </Style>
   );

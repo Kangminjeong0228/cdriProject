@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Title3, Body2, Caption } from "../style/Text";
-import { BookType, BookMetaDataType } from "../api";
+import { BookType } from "../api";
 
 interface BookListType {
   likeBook: BookType[];
   setLikeBook: React.Dispatch<React.SetStateAction<BookType[]>>;
   type: string;
   bookData: BookType[];
-  bookMetaData: BookMetaDataType;
+  totalBookCount: number;
 }
 const BookList: React.FC<BookListType> = ({
   likeBook,
   setLikeBook,
   type,
   bookData,
-  bookMetaData,
+  totalBookCount,
 }) => {
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [detailBookData, setDetailBookData] = useState<BookType>();
@@ -53,7 +53,7 @@ const BookList: React.FC<BookListType> = ({
       <div className="bookListLengthWrap">
         <p>{subTitle}</p>
         <p>
-          총 <span>{bookMetaData?.total_count ?? 0}</span>건
+          총 <span>{totalBookCount}</span>건
         </p>
       </div>
     );

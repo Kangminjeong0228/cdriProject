@@ -2,26 +2,31 @@ import styled from "styled-components";
 import { BookMetaDataType } from "../api";
 
 interface PaginationProps {
-  bookMetaData: BookMetaDataType;
+  totalPage: number;
   currentPage: number;
   setCurrentPage: (page: number) => void;
 }
 
 const Pagination: React.FC<PaginationProps> = ({
-  bookMetaData,
+  totalPage,
   currentPage,
   setCurrentPage,
 }) => {
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(bookMetaData?.total_count / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil((totalPage || 1) / itemsPerPage));
   const maxPageButtons = 5;
 
-  const startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
-  const endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+  let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+  if (endPage - startPage + 1 < maxPageButtons) {
+    startPage = Math.max(1, endPage - maxPageButtons + 1);
+  }
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
     (_, i) => startPage + i
   );
+  if (totalPages < 2) return null;
 
   const changePage = (page: number) => {
     setCurrentPage(page);
